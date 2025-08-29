@@ -81,3 +81,20 @@ package_version_handler <- function(name, res) {
     # Return the result (Plumber handles JSON conversion)
     result
 }
+
+#* Get the list of packages associated with an email
+#* @param email The email address to search for.
+#* @get /packages/<email>
+email_packages_handler <- function(email) {
+    search_term <- paste0("%", email, "%")
+    sql_query <- "
+      SELECT Package, Version, Author, Maintainer FROM packages
+      WHERE
+        Author ILIKE ? OR
+        Maintainer ILIKE ?
+    "
+    results <- dbGetQuery(con, sql_query, params = list(search_term, search_term))
+
+    # Return the results (Plumber handles JSON conversion)
+    results
+}
