@@ -1,9 +1,9 @@
-softdb <- BiocPkgTools:::get_build_status_db_url(
+softstatus <- BiocPkgTools:::get_build_status_db_url(
     BiocManager::version(),
     pkgType = "bioc"
 )
 download.file(
-    softdb,
+    softstatus,
     "~/data/BUILD_STATUS_DB.txt"
 )
 
