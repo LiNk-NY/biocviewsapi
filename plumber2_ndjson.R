@@ -93,7 +93,9 @@ email_packages_handler <- function(email) {
         Author ILIKE ? OR
         Maintainer ILIKE ?
     "
-    results <- dbGetQuery(con, sql_query, params = list(search_term, search_term))
+    results <- dbGetQuery(
+        con, sql_query, params = list(search_term, search_term)
+    )
 
     # Return the results (Plumber handles JSON conversion)
     results
