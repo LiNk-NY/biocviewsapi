@@ -63,7 +63,6 @@ search_handler <- function(query) {
         con, sql_query, params = list(search_term, search_term, search_term)
     )
 
-    # Return the results. Plumber will handle JSON serialization automatically.
     results
 }
 
@@ -82,7 +81,6 @@ package_version_handler <- function(name, res) {
         return(list(error = paste0("Package '", name, "' not found.")))
     }
 
-    # Return the result (Plumber handles JSON conversion)
     result
 }
 
@@ -101,6 +99,5 @@ email_packages_handler <- function(email) {
         con, sql_query, params = list(search_term, search_term)
     )
 
-    # Return the results (Plumber handles JSON conversion)
     results
 }
