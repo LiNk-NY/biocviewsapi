@@ -24,9 +24,9 @@ for (pkgname in names(splitdat)) {
     )
     names(pkglist) <- pkgname
     jsonlite::toJSON(
-        pkglist, auto_unbox = TRUE, null = "null", pretty = TRUE
+        pkglist, auto_unbox = TRUE
     ) |>
-    writeLines(text = _, con = con, sep = "\n")
+    writeLines(con = con)
 }
 
 close(con)
