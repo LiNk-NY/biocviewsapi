@@ -12,7 +12,7 @@ dat <- readLines("~/data/BUILD_STATUS_DB.txt") |>
     do.call(rbind.data.frame, args = _)
 names(dat) <- c("pkg", "node", "stage", "result")
 
-output_file <- "~/data/bioconductor_buildstatus.ndjson"
+output_file <- "bioconductor_buildstatus.ndjson"
 con <- file(output_file, "w")
 
 splitdat <- split(dat[, -1], dat$pkg)

@@ -8,6 +8,8 @@ WORKDIR /app
 
 COPY plumber2_ndjson.R .
 COPY bioconductor_packages.ndjson .
+COPY bioconductor_buildreport.ndjson .
+COPY bioconductor_buildstatus.ndjson .
 
 EXPOSE 8000
 

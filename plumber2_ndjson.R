@@ -12,6 +12,8 @@ con <- dbConnect(duckdb::duckdb(), dbdir = ":memory:", read_only = FALSE)
 load_data <- function() {
     # Define the path to your NDJSON file
     ndjson_file <- "bioconductor_packages.ndjson"
+    report_file <- "bioconductor_buildreport.ndjson"
+    status_file <- "bioconductor_buildstatus.ndjson"
 
     # Check if the file exists
     if (!file.exists(ndjson_file))
@@ -24,7 +26,9 @@ load_data <- function() {
         con,
         paste0(
             "INSTALL json;",
-            "CREATE TABLE packages AS SELECT * FROM read_json_auto(?, format = 'newline_delimited')"
+            "CREATE TABLE packages AS SELECT * FROM read_json_auto(?, format = 'newline_delimited');",
+            "CREATE TABLE buildreport AS SELECT * FROM read_json_auto(?, format = 'newline_delimited');",
+            "CREATE TABLE buildstatus AS SELECT * FROM read_json_auto(?, format = 'newline_delimited')"
         ),
         params = list(ndjson_file)
     )

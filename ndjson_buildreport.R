@@ -15,7 +15,7 @@ untar(report_file, exdir = report_folder)
 softreporttab <- BiocPkgTools:::.read_info_dcfs(report_folder)
 softreporttab[["pkgType"]] <- "bioc"
 
-output_file <- "~/data/bioconductor_buildreport.ndjson"
+output_file <- "bioconductor_buildreport.ndjson"
 con <- file(output_file, "w")
 
 for (i in seq_len(nrow(softreporttab))) {
