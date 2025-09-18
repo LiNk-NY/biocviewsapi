@@ -19,18 +19,25 @@ load_data <- function() {
     if (!file.exists(ndjson_file))
         stop("NDJSON file not found.")
 
-    # Load the NDJSON file directly into a DuckDB table.
-    # The 'json' format specifier is what tells DuckDB how to read the file.
-    # We'll use the FROM read_json_auto() syntax which is robust.
+    dbExecute(con, "INSTALL json")
+    dbExecute(con, "LOAD json")
+
     dbExecute(
         con,
-        paste0(
-            "INSTALL json;",
-            "CREATE TABLE packages AS SELECT * FROM read_json_auto(?, format = 'newline_delimited');",
-            "CREATE TABLE buildreport AS SELECT * FROM read_json_auto(?, format = 'newline_delimited');",
-            "CREATE TABLE buildstatus AS SELECT * FROM read_json_auto(?, format = 'newline_delimited')"
-        ),
+        "CREATE OR REPLACE TABLE packages AS SELECT * FROM read_json_auto(?, format = 'newline_delimited')",
         params = list(ndjson_file)
+    )
+
+    dbExecute(
+        con,
+        "CREATE OR REPLACE TABLE buildreport AS SELECT * FROM read_json_auto(?, format = 'newline_delimited')",
+        params = list(report_file)
+    )
+
+    dbExecute(
+        con,
+        "CREATE OR REPLACE TABLE buildstatus AS SELECT * FROM read_json_auto(?, format = 'newline_delimited')",
+        params = list(status_file)
     )
 }
 
