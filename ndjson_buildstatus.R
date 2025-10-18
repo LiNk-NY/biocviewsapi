@@ -15,18 +15,11 @@ names(dat) <- c("pkg", "node", "stage", "result")
 output_file <- "bioconductor_buildstatus.ndjson"
 con <- file(output_file, "w")
 
-splitdat <- split(dat[, -1], dat$pkg)
 
-for (pkgname in names(splitdat)) {
-    pkg <- splitdat[[pkgname]]
-    pkglist <- list(
-        split(pkg[, names(pkg) != "node"], pkg$node)
-    )
-    names(pkglist) <- pkgname
-    jsonlite::toJSON(
-        pkglist, auto_unbox = TRUE
-    ) |>
-    writeLines(con = con)
+for (i in seq_len(nrow(dat))) {
+    row_list <- as.list(dat[i, ])
+    json_line <- jsonlite::toJSON(row_list, auto_unbox = TRUE, null = "null")
+    writeLines(json_line, con, sep = "\n")
 }
 
 close(con)
