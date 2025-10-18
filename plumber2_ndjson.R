@@ -53,22 +53,15 @@ load_data()
 #* @param query The search term.
 #* @get /search
 search_handler <- function(query) {
-    # Sanitize the query to be used in a LIKE statement
-    search_term <- paste0("%", query, "%")
+    packages_tbl <- tbl(con, "packages")
 
-    # Perform a case-insensitive search across multiple columns using SQL.
-    # The dbGetQuery function sends the SQL to DuckDB and returns a data frame.
-    # Using parameterized queries to prevent SQL injection.
-    sql_query <- "
-      SELECT * FROM packages
-      WHERE
-        Package ILIKE ? OR
-        Title ILIKE ? OR
-        Description ILIKE ?
-    "
-    results <- dbGetQuery(
-        con, sql_query, params = list(search_term, search_term, search_term)
-    )
+    results <- packages_tbl |>
+        filter(
+            grepl(query, Package, ignore.case = TRUE) |
+            grepl(query, Title, ignore.case = TRUE) |
+            grepl(query, Description, ignore.case = TRUE)
+        ) |>
+        collect()
 
     results
 }
@@ -78,9 +71,12 @@ search_handler <- function(query) {
 #* @param res The response object.
 #* @get /package/<name>
 package_version_handler <- function(name, res) {
-    # Find the package with a case-insensitive search
-    sql_query <- "SELECT Package, Version FROM packages WHERE Package ILIKE ?"
-    result <- dbGetQuery(con, sql_query, params = list(name))
+    packages_tbl <- tbl(con, "packages")
+
+    result <- packages_tbl |>
+        filter(Package == name) |>
+        select(Package, Version) |>
+        collect()
 
     # If no rows are returned, the package was not found
     if (nrow(result) == 0) {
@@ -96,15 +92,18 @@ package_version_handler <- function(name, res) {
 #* @get /packages/<email>
 email_packages_handler <- function(email) {
     search_term <- paste0("%", email, "%")
-    sql_query <- "
-      SELECT Package, Version, Author, Maintainer FROM packages
-      WHERE
-        Author ILIKE ? OR
-        Maintainer ILIKE ?
-    "
-    results <- dbGetQuery(
-        con, sql_query, params = list(search_term, search_term)
-    )
+    pkgtbl <- email_packages_handler(email)
+    pkgs <- pkgtbl[["Package"]]
+
+    buildstatus_tbl <- tbl(con, "buildstatus")
+    packages_tbl <- tbl(con, "packages")
+
+    maintainer_pkgs <- packages_tbl |>
+        filter(grepl(email, Maintainer, ignore.case = TRUE))
+
+    results <- buildstatus_tbl |>
+        semi_join(maintainer_pkgs, by = c("pkg" = "Package")) |>
+        collect()
 
     results
 }
