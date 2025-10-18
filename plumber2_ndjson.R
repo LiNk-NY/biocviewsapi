@@ -91,6 +91,46 @@ package_version_handler <- function(name, res) {
 #* @param email The email address to search for.
 #* @get /packages/<email>
 email_packages_handler <- function(email) {
+    packages_tbl <- tbl(con, "packages")
+
+    results <- packages_tbl |>
+        filter(
+            grepl(email, Author, ignore.case = TRUE) |
+            grepl(email, Maintainer, ignore.case = TRUE)
+        ) |>
+        select(Package, Version, Author, Maintainer) |>
+        collect()
+
+    results
+}
+
+#* Get build report for a specific package.
+#* @param name The name of the package.
+#* @get /checkResults/package/<name>
+checkResults_package_handler <- function(name, res) {
+    buildreport_tbl <- tbl(con, "buildreport")
+
+    result <- buildreport_tbl |>
+        filter(pkg == name) |>
+        collect()
+
+    if (!nrow(result)) {
+        res$status <- 404 # Not Found
+        return(
+            list(
+                error =
+                    paste0("Build report for package '", name, "' not found.")
+            )
+        )
+    }
+    result
+}
+
+#* Get build status for a maintainer email
+#*
+#* @param email The email address to search for.
+#* @get /checkResults/maintainer/<email>
+checkResults_maintainer_handler <- function(email) {
     search_term <- paste0("%", email, "%")
     pkgtbl <- email_packages_handler(email)
     pkgs <- pkgtbl[["Package"]]
