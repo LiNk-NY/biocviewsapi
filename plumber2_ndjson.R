@@ -16,7 +16,7 @@ load_data <- function() {
     status_file <- "bioconductor_buildstatus.ndjson"
 
     # Check if the file exists
-    if (!file.exists(packages_file))
+    if (!file.exists(views_file))
         stop("Packages NDJSON file not found.")
 
     dbExecute(con, "INSTALL json")
@@ -24,8 +24,8 @@ load_data <- function() {
 
     dbExecute(
         con,
-        "CREATE OR REPLACE TABLE packages AS SELECT * FROM read_json_auto(?, format = 'newline_delimited')",
-        params = list(packages_file)
+        "CREATE OR REPLACE TABLE views AS SELECT * FROM read_json_auto(?, format = 'newline_delimited')",
+        params = list(views_file)
     )
 
     dbExecute(
@@ -53,9 +53,9 @@ load_data()
 #* @param query The search term.
 #* @get /search
 search_handler <- function(query) {
-    packages_tbl <- tbl(con, "packages")
+    views_tbl <- tbl(con, "views")
 
-    results <- packages_tbl |>
+    results <- views_tbl |>
         filter(
             grepl(query, Package, ignore.case = TRUE) |
             grepl(query, Title, ignore.case = TRUE) |
@@ -71,9 +71,9 @@ search_handler <- function(query) {
 #* @param res The response object.
 #* @get /package/<name>
 package_version_handler <- function(name, res) {
-    packages_tbl <- tbl(con, "packages")
+    views_tbl <- tbl(con, "views")
 
-    result <- packages_tbl |>
+    result <- views_tbl |>
         filter(Package == name) |>
         select(Package, Version) |>
         collect()
@@ -89,11 +89,11 @@ package_version_handler <- function(name, res) {
 
 #* Get the list of packages associated with an email
 #* @param email The email address to search for.
-#* @get /packages/<email>
-email_packages_handler <- function(email) {
-    packages_tbl <- tbl(con, "packages")
+#* @get /views/<email>
+email_views_handler <- function(email) {
+    views_tbl <- tbl(con, "views")
 
-    results <- packages_tbl |>
+    results <- views_tbl |>
         filter(
             grepl(email, Author, ignore.case = TRUE) |
             grepl(email, Maintainer, ignore.case = TRUE)
@@ -132,13 +132,13 @@ checkResults_package_handler <- function(name, res) {
 #* @get /checkResults/maintainer/<email>
 checkResults_maintainer_handler <- function(email) {
     search_term <- paste0("%", email, "%")
-    pkgtbl <- email_packages_handler(email)
+    pkgtbl <- email_views_handler(email)
     pkgs <- pkgtbl[["Package"]]
 
     buildstatus_tbl <- tbl(con, "buildstatus")
-    packages_tbl <- tbl(con, "packages")
+    views_tbl <- tbl(con, "views")
 
-    maintainer_pkgs <- packages_tbl |>
+    maintainer_pkgs <- views_tbl |>
         filter(grepl(email, Maintainer, ignore.case = TRUE))
 
     results <- buildstatus_tbl |>
