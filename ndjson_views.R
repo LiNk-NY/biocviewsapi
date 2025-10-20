@@ -7,7 +7,7 @@ views <- read.dcf("~/data/VIEWS")
 
 viewsdf <- as.data.frame(views, stringsAsFactors = FALSE)
 
-output_file <- "bioconductor_packages.ndjson"
+output_file <- "bioconductor_views.ndjson"
 con <- file(output_file, "w")
 
 for (i in seq_len(nrow(viewsdf))) {

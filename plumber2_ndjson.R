@@ -11,7 +11,7 @@ con <- dbConnect(duckdb::duckdb(), dbdir = ":memory:", read_only = FALSE)
 
 load_data <- function() {
     # Define the path to your NDJSON file
-    packages_file <- "bioconductor_packages.ndjson"
+    views_file <- "bioconductor_views.ndjson"
     report_file <- "bioconductor_buildreport.ndjson"
     status_file <- "bioconductor_buildstatus.ndjson"
 
