@@ -79,7 +79,7 @@ package_version_handler <- function(name, res) {
         collect()
 
     # If no rows are returned, the package was not found
-    if (nrow(result) == 0) {
+    if (!nrow(result)) {
         res$status <- 404 # Not Found
         return(list(error = paste0("Package '", name, "' not found.")))
     }
