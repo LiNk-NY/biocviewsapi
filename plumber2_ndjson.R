@@ -69,13 +69,13 @@ search_handler <- function(query) {
 #* Get the version of a specific package.
 #* @param name The name of the package.
 #* @param res The response object.
-#* @get /package/<name>
+#* @get /package/version/<name>
 package_version_handler <- function(name, res) {
     views_tbl <- tbl(con, "views")
 
     result <- views_tbl |>
         filter(Package == name) |>
-        select(Package, Version) |>
+        select(Version) |>
         collect()
 
     # If no rows are returned, the package was not found
