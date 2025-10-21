@@ -32,16 +32,26 @@ load_data <- function() {
     views <- read.dcf(views_file) |>
         as.data.frame(stringsAsFactors = FALSE)
 
-    ## commaCols <- c(
-    ##     'Depends', 'Suggests', 'dependsOnMe', 'Imports', 'importsMe',
-    ##     'Enhances', 'vignettes', 'vignetteTitles', 'suggestsMe', 'Maintainer',
-    ##     'biocViews', 'Archs', 'linksToMe', 'LinkingTo', 'Rfiles'
-    ## )
-    ## isCommaCol <- colnames(views) %in% commaCols
-    ## views[isCommaCol] <- lapply(
-    ##     views[isCommaCol],
-    ##     function(x) stringr::str_split(x, '\\s?,\\s?')
-    ## )
+    commaCols <- c(
+        'Depends', 'Suggests', 'dependsOnMe', 'Imports', 'importsMe',
+        'Enhances', 'vignettes', 'vignetteTitles', 'suggestsMe',
+        'biocViews', 'Archs', 'linksToMe', 'LinkingTo', 'Rfiles'
+    )
+    colsToSplit <- intersect(colnames(views), commaCols)
+    ## TODO: fix the splitting to produce lists
+    ## views <- views |>
+    ##     dplyr::mutate(
+    ##         dplyr::across(
+    ##             dplyr::all_of(colsToSplit),
+    ##             ~ {
+    ##                 splits <- strsplit(x = ., split = "\\s?,\\s?")
+    ##                 lapply(
+    ##                     splits,
+    ##                     function(x) if (is.na(x[1])) NULL else x
+    ##                 )
+    ##             }
+    ##         )
+    ##     )
     views[["Author"]] <-
         views[["Author"]] |>
         gsub("\n", " ", x = _) |>
@@ -55,8 +65,9 @@ load_data <- function() {
                 gsub("\\sand\\s", ", ", x = _) |>
                 gsub(",\\s+,", ",", x = _) |>
                 gsub("\\.+$", "", x = _) |>
-                trimws(x = _)
-        })
+                trimws(x = _) |>
+                paste(collapse = ", ")
+        }) |> unlist(recursive = FALSE)
 
     dbWriteTable(con, "views", views, overwrite = TRUE)
 }
