@@ -153,9 +153,6 @@ checkResults_package_handler <- function(name, res) {
 #* @param email The email address to search for.
 #* @get /checkResults/maintainer/<email>
 checkResults_maintainer_handler <- function(email) {
-    search_term <- paste0("%", email, "%")
-    pkgtbl <- email_views_handler(email)
-    pkgs <- pkgtbl[["Package"]]
 
     buildstatus_tbl <- tbl(con, "buildstatus")
     views_tbl <- tbl(con, "views")
