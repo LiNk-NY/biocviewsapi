@@ -117,7 +117,6 @@ email_views_handler <- function(email) {
 
     results <- views_tbl |>
         filter(
-            grepl(email, Author, ignore.case = TRUE) |
             grepl(email, Maintainer, ignore.case = TRUE)
         ) |>
         select(Package, Version, Author, Maintainer) |>
