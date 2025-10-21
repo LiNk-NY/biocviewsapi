@@ -10,35 +10,57 @@ library(dplyr)
 con <- dbConnect(duckdb::duckdb(), dbdir = ":memory:", read_only = FALSE)
 
 load_data <- function() {
-    # Define the path to your NDJSON file
-    views_file <- "bioconductor_views.ndjson"
-    report_file <- "bioconductor_buildreport.ndjson"
-    status_file <- "bioconductor_buildstatus.ndjson"
-
-    # Check if the file exists
-    if (!file.exists(views_file))
-        stop("Packages NDJSON file not found.")
-
-    dbExecute(con, "INSTALL json")
-    dbExecute(con, "LOAD json")
-
-    dbExecute(
-        con,
-        "CREATE OR REPLACE TABLE views AS SELECT * FROM read_json_auto(?, format = 'newline_delimited')",
-        params = list(views_file)
+    ## Generate buildreport data.frame from live DB file
+    buildreport <- BiocPkgTools::biocBuildReportDB(
+        version = BiocManager::version(),
+        pkgType = "software"
     )
+    dbWriteTable(con, "buildreport", buildreport, overwrite = TRUE)
 
-    dbExecute(
-        con,
-        "CREATE OR REPLACE TABLE buildreport AS SELECT * FROM read_json_auto(?, format = 'newline_delimited')",
-        params = list(report_file)
+    ## Generate buildstatus data.frame from live DB file
+    buildstatus <- BiocPkgTools::biocBuildStatusDB(
+        version = BiocManager::version(),
+        pkgType = "software"
     )
+    dbWriteTable(con, "buildstatus", buildstatus, overwrite = TRUE)
 
-    dbExecute(
-        con,
-        "CREATE OR REPLACE TABLE buildstatus AS SELECT * FROM read_json_auto(?, format = 'newline_delimited')",
-        params = list(status_file)
-    )
+    ## Generate views data.frame from live VIEWS file
+    views_url <- "https://bioconductor.org/packages/devel/bioc/VIEWS"
+    views_file <- file.path(tempdir(), "VIEWS")
+    download.file(url = views_url, destfile = views_file)
+
+    views <- read.dcf(views_file) |>
+        as.data.frame(stringsAsFactors = FALSE)
+
+    ## commaCols <- c(
+    ##     'Depends', 'Suggests', 'dependsOnMe', 'Imports', 'importsMe',
+    ##     'Enhances', 'vignettes', 'vignetteTitles', 'suggestsMe', 'Maintainer',
+    ##     'biocViews', 'Archs', 'linksToMe', 'LinkingTo', 'Rfiles'
+    ## )
+    ## isCommaCol <- colnames(views) %in% commaCols
+    ## views[isCommaCol] <- lapply(
+    ##     views[isCommaCol],
+    ##     function(x) stringr::str_split(x, '\\s?,\\s?')
+    ## )
+    views[["Author"]] <-
+        views[["Author"]] |>
+        gsub("\n", " ", x = _) |>
+        gsub("\\[.*?\\]", "", x = _) |>
+        gsub("<.*?>", "", x = _) |>
+        gsub("\\(.*?\\)", "", x = _) |>
+        gsub("\\s+", " ", x = _) |>
+        strsplit(split = "\\s*,\\s*") |>
+        lapply(X = _, FUN = function(authors) {
+            gsub("\\w* contributions ?\\w*", ", ", authors) |>
+                gsub("\\sand\\s", ", ", x = _) |>
+                gsub(",\\s+,", ",", x = _) |>
+                gsub("\\.+$", "", x = _) |>
+                trimws(x = _) |>
+                paste(collapse = ", ")
+        }) |>
+        unlist(recursive = FALSE)
+
+    dbWriteTable(con, "views", views, overwrite = TRUE)
 }
 
 # Run the data loading function at startup
