@@ -55,10 +55,8 @@ load_data <- function() {
                 gsub("\\sand\\s", ", ", x = _) |>
                 gsub(",\\s+,", ",", x = _) |>
                 gsub("\\.+$", "", x = _) |>
-                trimws(x = _) |>
-                paste(collapse = ", ")
-        }) |>
-        unlist(recursive = FALSE)
+                trimws(x = _)
+        })
 
     dbWriteTable(con, "views", views, overwrite = TRUE)
 }
