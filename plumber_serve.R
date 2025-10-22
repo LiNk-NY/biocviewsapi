@@ -3,6 +3,7 @@ library(duckdb)
 library(jsonlite)
 library(dplyr)
 library(reqres)
+library(utils)
 
 # --- DuckDB Setup ---
 
@@ -183,6 +184,7 @@ checkResults_package_handler <- function(name, res) {
 #* @response 200:string A JSON array of build status records for packages
 #*   associated with the email
 checkResults_maintainer_handler <- function(email) {
+    email <- utils::URLdecode(email)
 
     buildstatus_tbl <- tbl(con, "buildstatus")
     views_tbl <- tbl(con, "views")
