@@ -1,7 +1,8 @@
-library(plumber)
+library(plumber2)
 library(duckdb)
 library(jsonlite)
 library(dplyr)
+library(reqres)
 
 # --- DuckDB Setup ---
 
@@ -56,31 +57,46 @@ load_data()
 
 # --- Plumber API Endpoints ---
 
-#* @apiTitle Bioconductor Package Search API
-#* @apiDescription An API for searching package metadata using DuckDB.
-
+#* Bioconductor Package Search API
+#*
 #* Search for packages by a query string in multiple fields.
-#* @param query The search term.
+#*
 #* @get /search
+#*
+#* @query term:string* Filter Package, Title and Description fields to those
+#*   matching the term.
+#*
+#* @serializer json
+#*
+#* @response 200:string A JSON array of package records matching the search
+#*   term.
 search_handler <- function(query) {
     views_tbl <- tbl(con, "views")
 
     results <- views_tbl |>
         filter(
-            grepl(query, Package, ignore.case = TRUE) |
-            grepl(query, Title, ignore.case = TRUE) |
-            grepl(query, Description, ignore.case = TRUE)
+            grepl(query$term, Package, ignore.case = TRUE) |
+            grepl(query$term, Title, ignore.case = TRUE) |
+            grepl(query$term, Description, ignore.case = TRUE)
         ) |>
         collect()
 
     results
 }
 
-#* Get the version of a specific package.
-#* @param name The name of the package.
-#* @param res The response object.
+#* Get the version of a package
+#*
 #* @get /package/version/<name>
-package_version_handler <- function(name, res) {
+#*
+#* @param name:string* The name of the package
+#*
+#* @serializer json
+#*
+#* @response 200:string A JSON object containing the package version
+#*
+#* @response 404:string If the package is not found.
+#*
+package_version_handler <- function(name) {
     views_tbl <- tbl(con, "views")
 
     result <- views_tbl |>
@@ -90,17 +106,27 @@ package_version_handler <- function(name, res) {
 
     # If no rows are returned, the package was not found
     if (!nrow(result)) {
-        res$status <- 404 # Not Found
-        return(list(error = paste0("Package '", name, "' not found.")))
+        reqres::abort_not_found(
+            detail = paste0("Package '", name, "' not found.")
+        )
     }
 
     result
 }
 
 #* Get the list of packages associated with an email
-#* @param email The email address to search for.
+#*
 #* @get /views/<email>
+#*
+#* @param email* The email address to search for.
+#*
+#* @serializer json
+#*
+#* @response 200:string A JSON array of package records associated with the
+#*   email.
 email_views_handler <- function(email) {
+    email <- utils::URLdecode(email)
+
     views_tbl <- tbl(con, "views")
 
     results <- views_tbl |>
@@ -110,12 +136,27 @@ email_views_handler <- function(email) {
         select(Package, Version, Author, Maintainer) |>
         collect()
 
+    if (!nrow(results))
+        reqres::abort_not_found(
+            detail = paste0("No packages found for email '", email, "'.")
+        )
+
     results
 }
 
 #* Get build report for a specific package.
-#* @param name The name of the package.
+#*
 #* @get /checkResults/package/<name>
+#*
+#* @param name The name of the package.
+#*
+#* @serializer json
+#*
+#* @response 200:string A JSON object containing the build report for the
+#*  package.
+#*
+#* @response 404:string If the package build report is not found.
+#*
 checkResults_package_handler <- function(name, res) {
     buildreport_tbl <- tbl(con, "buildreport")
 
@@ -124,12 +165,8 @@ checkResults_package_handler <- function(name, res) {
         collect()
 
     if (!nrow(result)) {
-        res$status <- 404 # Not Found
-        return(
-            list(
-                error =
-                    paste0("Build report for package '", name, "' not found.")
-            )
+        reqres::abort_not_found(
+            detail = paste0("Build report for package '", name, "' not found.")
         )
     }
     result
@@ -137,8 +174,14 @@ checkResults_package_handler <- function(name, res) {
 
 #* Get build status for a maintainer email
 #*
-#* @param email The email address to search for.
 #* @get /checkResults/maintainer/<email>
+#*
+#* @param email The email address to search for.
+#*
+#* @serializer json
+#*
+#* @response 200:string A JSON array of build status records for packages
+#*   associated with the email
 checkResults_maintainer_handler <- function(email) {
 
     buildstatus_tbl <- tbl(con, "buildstatus")
