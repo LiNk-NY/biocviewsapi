@@ -30,19 +30,6 @@ load_data <- function() {
         pkgType = "software"
     )
 
-    commaCols <- c(
-        'Depends', 'Suggests', 'dependsOnMe', 'Imports', 'importsMe',
-        'Enhances', 'vignettes', 'vignetteTitles', 'suggestsMe',
-        'biocViews', 'Archs', 'linksToMe', 'LinkingTo', 'Rfiles'
-    )
-    colsToSplit <- intersect(colnames(views), commaCols)
-    views <- views |>
-        dplyr::mutate(
-            dplyr::across(
-                dplyr::all_of(colsToSplit),
-                ~ strsplit(x = ., split = "\\s?,\\s?")
-            )
-        )
     views[["Author"]] <-
         views[["Author"]] |>
         gsub("\n", " ", x = _) |>
