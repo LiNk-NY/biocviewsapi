@@ -25,12 +25,10 @@ load_data <- function() {
     dbWriteTable(con, "buildstatus", buildstatus, overwrite = TRUE)
 
     ## Generate views data.frame from live VIEWS file
-    views_url <- "https://bioconductor.org/packages/devel/bioc/VIEWS"
-    views_file <- file.path(tempdir(), "VIEWS")
-    download.file(url = views_url, destfile = views_file)
-
-    views <- read.dcf(views_file) |>
-        as.data.frame(stringsAsFactors = FALSE)
+    views <- BiocPkgTools::biocVIEWSdb(
+        version = BiocManager::version(),
+        pkgType = "software"
+    )
 
     commaCols <- c(
         'Depends', 'Suggests', 'dependsOnMe', 'Imports', 'importsMe',
