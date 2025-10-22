@@ -36,20 +36,13 @@ load_data <- function() {
         'biocViews', 'Archs', 'linksToMe', 'LinkingTo', 'Rfiles'
     )
     colsToSplit <- intersect(colnames(views), commaCols)
-    ## TODO: fix the splitting to produce lists
-    ## views <- views |>
-    ##     dplyr::mutate(
-    ##         dplyr::across(
-    ##             dplyr::all_of(colsToSplit),
-    ##             ~ {
-    ##                 splits <- strsplit(x = ., split = "\\s?,\\s?")
-    ##                 lapply(
-    ##                     splits,
-    ##                     function(x) if (is.na(x[1])) NULL else x
-    ##                 )
-    ##             }
-    ##         )
-    ##     )
+    views <- views |>
+        dplyr::mutate(
+            dplyr::across(
+                dplyr::all_of(colsToSplit),
+                ~ strsplit(x = ., split = "\\s?,\\s?")
+            )
+        )
     views[["Author"]] <-
         views[["Author"]] |>
         gsub("\n", " ", x = _) |>
