@@ -58,7 +58,8 @@ load_data <- function() {
                 gsub("\\.+$", "", x = _) |>
                 trimws(x = _) |>
                 paste(collapse = ", ")
-        }) |> unlist(recursive = FALSE)
+        }) |>
+        unlist(recursive = FALSE)
 
     dbWriteTable(con, "views", views, overwrite = TRUE)
 }
