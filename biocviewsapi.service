@@ -1,0 +1,15 @@
+[Unit]
+Description=Plumber API Service
+After=network.target
+
+[Service]
+User=mramos
+# Set the working directory to where your Plumber files are located
+WorkingDirectory=/home/user/biocviewsapi
+# Replace with the path to your R executable and the launch script
+ExecStart=/usr/bin/Rscript run_plumber.R
+# Restart the process if it fails
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
