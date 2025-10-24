@@ -2,7 +2,7 @@
 library(plumber2)
 
 # Define the file containing your endpoints
-plumber_file <- "plumber_serve.R"
+plumber_file <- "biocpkgtools_serve.R"
 
 # Check if the file exists (Optional, but helps with debugging)
 if (!file.exists(plumber_file))
