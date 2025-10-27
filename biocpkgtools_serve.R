@@ -15,21 +15,24 @@ load_data <- function() {
     ## Generate buildreport data.frame from live DB file
     buildreport <- BiocPkgTools::biocBuildReportDB(
         version = BiocManager::version(),
-        pkgType = "software"
+        pkgType =
+            c("software", "data-experiment", "data-annotation", "workflows")
     )
     dbWriteTable(con, "buildreport", buildreport, overwrite = TRUE)
 
     ## Generate buildstatus data.frame from live DB file
     buildstatus <- BiocPkgTools::biocBuildStatusDB(
         version = BiocManager::version(),
-        pkgType = "software"
+        pkgType =
+            c("software", "data-experiment", "data-annotation", "workflows")
     )
     dbWriteTable(con, "buildstatus", buildstatus, overwrite = TRUE)
 
     ## Generate views data.frame from live VIEWS file
     views <- BiocPkgTools::biocVIEWSdb(
         version = BiocManager::version(),
-        pkgType = "software"
+        pkgType =
+            c("software", "data-experiment", "data-annotation", "workflows")
     )
 
     views[["Author"]] <-
