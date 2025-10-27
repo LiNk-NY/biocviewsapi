@@ -118,6 +118,40 @@ package_version_handler <- function(name) {
     result
 }
 
+#* Get the Bioconductor type of a package
+#*
+#* The type indicates a package's Bioconductor domain and / or classification.
+#* This can be one of "bioc" (software), "data-experiment", "data-annotation",
+#* or "workflow".
+#*
+#* @get /package/type/<name>
+#*
+#* @param name:string* The name of the package
+#*
+#* @serializer json
+#*
+#* @response 200:string A JSON object containing the package type
+#*
+#* @response 404:string If the package is not found.
+#*
+package_type_handler <- function(name) {
+    buildreport_tbl <- tbl(con, "buildreport")
+
+    result <- buildreport_tbl |>
+        filter(pkg == name) |>
+        select(pkgType) |>
+        collect()
+
+    if (!nrow(result)) {
+        reqres::abort_not_found(
+            detail = paste0("Build report for package '", name, "' not found.")
+        )
+    }
+
+    result
+}
+
+
 #* Get the list of packages associated with an email
 #*
 #* @get /views/<email>
