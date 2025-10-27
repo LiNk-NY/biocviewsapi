@@ -118,6 +118,72 @@ package_version_handler <- function(name) {
     result
 }
 
+#* Get versions for a list of packages
+#*
+#* Accepts a comma-separated or newline-separated string of package names.
+#*
+#* @post /packages/version
+#*
+#* @parser text
+#* @serializer json
+#*
+#* @response 200:string A JSON object containing the package versions.
+#*
+packages_version_handler <- function(body) {
+    if (!length(body))
+        reqres::abort_bad_request(
+            detail = paste0("Package list is empty, malformed, or invalid.")
+        )
+
+    packages <- strsplit(body, ",|\\s+|\\n+")[[1]]
+    packages <- Filter(nzchar, packages)
+
+    if (!length(packages))
+        reqres::abort_bad_request(
+            detail = paste0("Package list is empty, malformed, or invalid.")
+        )
+
+    views_tbl <- tbl(con, "views")
+
+    views_tbl |>
+        filter(Package %in% packages) |>
+        select(Package, Version) |>
+        collect()
+}
+
+#* Get the package types for a list of packages
+#*
+#* Accepts a comma-separated or newline-separated string of package names.
+#*
+#* @post /packages/type
+#*
+#* @parser text
+#* @serializer json
+#*
+#* @response 200:string A JSON object containing the package types.
+#*
+packages_type_handler <- function(body) {
+    if (!length(body))
+        reqres::abort_bad_request(
+            detail = paste0("Package list is empty, malformed, or invalid.")
+        )
+
+    packages <- strsplit(body, ",|\\s+|\\n+")[[1]]
+    packages <- Filter(nzchar, packages)
+
+    if (!length(packages))
+        reqres::abort_bad_request(
+            detail = paste0("Package list is empty, malformed, or invalid.")
+        )
+
+    buildreport_tbl <- tbl(con, "buildreport")
+
+    buildreport_tbl |>
+        filter(pkg %in% packages) |>
+        select(pkg, pkgType) |>
+        collect()
+}
+
 #* Get the Bioconductor type of a package
 #*
 #* The type indicates a package's Bioconductor domain and / or classification.
