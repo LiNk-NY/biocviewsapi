@@ -260,7 +260,7 @@ email_views_handler <- function(email) {
 #*
 #* @response 404:string If the package build report is not found.
 #*
-checkResults_package_handler <- function(name, res) {
+checkResults_package_handler <- function(name) {
     buildreport_tbl <- tbl(con, "buildreport")
 
     result <- buildreport_tbl |>
