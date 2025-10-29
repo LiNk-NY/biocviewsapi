@@ -237,7 +237,6 @@ email_views_handler <- function(email) {
         filter(
             grepl(email, Maintainer, ignore.case = TRUE)
         ) |>
-        select(Package, Version, Author, Maintainer) |>
         collect()
 
     if (!nrow(results))
