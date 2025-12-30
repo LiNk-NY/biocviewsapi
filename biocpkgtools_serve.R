@@ -244,7 +244,7 @@ email_views_handler <- function(query, email) {
 
     results <- views_tbl |>
         filter(
-            grepl(email, Maintainer, ignore.case = TRUE)
+            grepl(email, Maintainer, TRUE)
         ) |>
         collect()
 
