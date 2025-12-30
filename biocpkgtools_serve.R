@@ -224,11 +224,20 @@ package_type_handler <- function(name) {
 #*
 #* @param email* The email address to search for.
 #*
+#* @query pkgType:string Optional comma-separated list of package types to
+#*   filter
+#*
 #* @serializer json
 #*
 #* @response 200:string A JSON array of package records associated with the
 #*   email.
-email_views_handler <- function(email) {
+email_views_handler <- function(query, email) {
+    pkgType <- strsplit(query$pkgType, ",", fixed = TRUE)[[1L]]
+    pkgType <- gsub("software", "bioc", pkgType, fixed = TRUE)
+    pkgs <- tbl(con, "buildreport") |>
+        filter(pkgType %in% !!pkgType) |>
+        collect()
+
     email <- utils::URLdecode(email)
 
     views_tbl <- tbl(con, "views")
@@ -244,7 +253,11 @@ email_views_handler <- function(email) {
             detail = paste0("No packages found for email '", email, "'.")
         )
 
-    results
+    left_join(
+        results,
+        pkgs,
+        by = c("Package" = "pkg")
+    )
 }
 
 #* Get build report for a specific package.
