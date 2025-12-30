@@ -253,10 +253,10 @@ email_views_handler <- function(query, email) {
             detail = paste0("No packages found for email '", email, "'.")
         )
 
-    left_join(
-        results,
+    inner_join(
         pkgs,
-        by = c("Package" = "pkg")
+        results,
+        by = c(pkg = "Package")
     )
 }
 
