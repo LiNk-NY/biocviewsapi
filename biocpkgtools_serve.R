@@ -224,15 +224,17 @@ package_type_handler <- function(name) {
 #*
 #* @param email* The email address to search for.
 #*
-#* @query pkgType:string Optional comma-separated list of package types to
-#*   filter
+#* @query pkgType:[string("software")] Any of "software", "data-experiment",
+#*   "data-annotation", or "workflows" package types as a comma-separated
+#*   string.
 #*
 #* @serializer json
 #*
 #* @response 200:string A JSON array of package records associated with the
 #*   email.
 email_views_handler <- function(query, email) {
-    pkgType <- strsplit(query$pkgType, ",", fixed = TRUE)[[1L]]
+    pkgType_input <- query$pkgType %||% "software"
+    pkgType <- strsplit(pkgType_input, ",", fixed = TRUE)[[1L]]
     pkgType <- gsub("software", "bioc", pkgType, fixed = TRUE)
     pkgs <- tbl(con, "buildreport") |>
         filter(pkgType %in% !!pkgType) |>
@@ -294,22 +296,35 @@ checkResults_package_handler <- function(name) {
 #*
 #* @param email The email address to search for.
 #*
+#* @query pkgType:[string("software")] Any of "software", "data-experiment",
+#*   "data-annotation", or "workflows" package types as a comma-separated
+#*   string.
+#*
 #* @serializer json
 #*
 #* @response 200:string A JSON array of build status records for packages
 #*   associated with the email
-checkResults_maintainer_handler <- function(email) {
-    email <- utils::URLdecode(email)
-
-    buildstatus_tbl <- tbl(con, "buildstatus")
-    views_tbl <- tbl(con, "views")
-
-    maintainer_pkgs <- views_tbl |>
-        filter(grepl(email, Maintainer, ignore.case = TRUE))
-
-    results <- buildstatus_tbl |>
-        semi_join(maintainer_pkgs, by = c("pkg" = "Package")) |>
+checkResults_maintainer_handler <- function(query, email) {
+    pkgType_input <- query$pkgType %||% "software"
+    pkgType <- strsplit(pkgType_input, ",", fixed = TRUE)[[1L]]
+    pkgType <- gsub("software", "bioc", pkgType, fixed = TRUE)
+    pkgs <- tbl(con, "buildreport") |>
+        filter(pkgType %in% !!pkgType) |>
         collect()
 
-    results
+    email <- utils::URLdecode(email)
+
+    results <- tbl(con, "views") |>
+        filter(grepl(email, Maintainer, ignore.case = TRUE)) |>
+        inner_join(
+            tbl(con, "buildstatus"),
+            by = c(Package = "pkg")
+        ) |>
+        collect()
+
+    inner_join(
+        pkgs,
+        results,
+        by = c(pkg = "Package")
+    )
 }
