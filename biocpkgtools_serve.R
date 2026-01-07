@@ -256,9 +256,9 @@ email_views_handler <- function(query, email) {
         )
 
     inner_join(
-        pkgs,
         results,
-        by = c(pkg = "Package")
+        pkgs,
+        by = c(Package = "pkg")
     )
 }
 
@@ -323,8 +323,8 @@ checkResults_maintainer_handler <- function(query, email) {
         collect()
 
     inner_join(
-        pkgs,
         results,
-        by = c(pkg = "Package")
+        pkgs,
+        by = c(Package = "pkg")
     )
 }
